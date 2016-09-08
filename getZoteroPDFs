@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+# getZoteroPDFs - get pdfs from zotero with a particular tag, using MozRepl
+#
+# Requires installation of MozRepl from CPAN, Firefox, Zotero, and MozRepl
+#                          firefox extension.
+#
+# The directory is specified below 
+#
+# Jason Friedman (write.to.jason@gmail.com, www.curiousjason.com)
+# Last updated 4th October 2015: Don't crash when filename is undefined
+
+use strict;
+use warnings;
+use MozRepl;
+
+# output dir
+my $outputDir = "~/Dropbox/toread";
+# tags to extract PDFs
+my $tag = 'toread';
+
+my $repl = MozRepl->new;
+# Make it quiet
+# $repl->setup_log([qw/error fatal/]);
+$repl->setup;
+my $executestring = 'var outputDir = "' . $outputDir . '";var tag = "' . $tag . '";';
+$executestring .= q|var tmpDir = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);  
+tmpDir.initWithPath(outputDir);
+
+var items = Zotero.Items.getAll(); 
+
+for(i=0; i<items.length; i++) {
+  var item = items[i];
+  var tags = item.getTags();
+  for (var j=0; j<tags.length; j++) {
+    if (tags[j].name == tag) {
+      attachments = item.getAttachments(); 
+      for (var k=0; k<attachments.length;k++) {
+	// only copy pdfs
+	var file = Zotero.Items.get(attachments[k]).getFile();
+	var filename = file.leafName;
+        if (typeof filename !== 'undefined') {
+       	  filenamelength = filename.length;
+	  var ending = filename.substr(filenamelength-3,3);
+	  if (ending=='pdf') {
+                var file2 = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile);
+                file2.initWithPath(outputDir + file.leafName);  
+                if (file2.exists())  
+                      file2.remove(false);  
+    	        file.copyTo(tmpDir,file.leafName);
+          }
+        }
+      }
+    }
+  }
+ }
+|;
+
+$repl->execute($executestring);
+
