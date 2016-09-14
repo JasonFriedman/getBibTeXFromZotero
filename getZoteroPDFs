@@ -4,10 +4,11 @@
 # Requires installation of MozRepl from CPAN, Firefox, Zotero, and MozRepl
 #                          firefox extension.
 #
-# The directory is specified below 
+# The directory / tag is specified below 
 #
 # Jason Friedman (write.to.jason@gmail.com, www.curiousjason.com)
-# Last updated 4th October 2015: Don't crash when filename is undefined
+# Last updated 14th September 2016: Change timeout to 120s
+# Updated 4th October 2015: Don't crash when filename is undefined
 
 use strict;
 use warnings;
@@ -20,8 +21,9 @@ my $tag = 'toread';
 
 my $repl = MozRepl->new;
 # Make it quiet
-# $repl->setup_log([qw/error fatal/]);
+$repl->setup_log([qw/error fatal/]);
 $repl->setup;
+$repl->client->{telnet}->timeout(120);
 my $executestring = 'var outputDir = "' . $outputDir . '";var tag = "' . $tag . '";';
 $executestring .= q|var tmpDir = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);  
 tmpDir.initWithPath(outputDir);
